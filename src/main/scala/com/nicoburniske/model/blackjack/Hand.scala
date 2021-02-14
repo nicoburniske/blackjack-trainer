@@ -7,7 +7,8 @@ object Hand {
   def apply(): Hand = {
     Hand(Nil)
   }
-  def apply(cards: Card*) : Hand= {
+
+  def apply(cards: Card*): Hand = {
     Hand(cards.toList)
   }
 }
@@ -25,6 +26,7 @@ case class Hand(cards: List[Card]) {
 
   /**
    * Computes all possible values of the hand.
+   * Returns a List containing 0 if there are no cards in the hand
    */
   def values: List[Int] = {
     this.cards.foldLeft(List(0)) { (acc, card) =>
@@ -48,18 +50,30 @@ case class Hand(cards: List[Card]) {
       .reduceOption(_ max _)
   }
 
-  def winsOver(dealer: Hand): Option[Boolean] = {
+  def topValue: Int = {
+    this.values.max
+  }
+
+  /**
+   * Finds the stronger hand
+   *
+   * @param dealer the other hand
+   * @return
+   * 1 - this hand is stronger
+   * 0 - the hands are tied
+   * -1 - the dealer's hand is stronger
+   */
+  def winsOver(dealer: Hand): Option[Int] = {
     (this.bestValue, dealer.bestValue) match {
-      case (_, Some(Hand.WINNING_SCORE)) => Some(false)
-      case (Some(best), Some(dealerBest)) => Some(best > dealerBest)
-      case (Some(_), None) => Some(true)
-      case (None, Some(_)) => Some(false)
+      case (Some(best), Some(dealerBest)) => Some(best.compareTo(dealerBest))
+      case (Some(_), None) => Some(1)
+      case (None, Some(_)) => Some(-1)
       case (_, _) => None
     }
   }
 
   def canHit: Boolean = {
-    this.values.exists(_ < Hand.WINNING_SCORE)
+    !this.bestValue.contains(Hand.WINNING_SCORE) && this.values.exists(_ < Hand.WINNING_SCORE)
   }
 
   def dealFromDeck(deck: Deck, numCards: Int): (Deck, Hand) = {

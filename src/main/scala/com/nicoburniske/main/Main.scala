@@ -1,7 +1,7 @@
 package com.nicoburniske.main
 
-import com.nicoburniske.model.BlackjackRef
 import com.nicoburniske.model.player.PlayerCLI
+import com.nicoburniske.model.ref.BlackjackRef
 import com.nicoburniske.model.strat.HitSoftSeventeen
 
 

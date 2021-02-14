@@ -1,11 +1,10 @@
 package com.nicoburniske.model.player
 
-import com.nicoburniske.model.blackjack.{GameAction, GamePlayer, Hand, Hit, Quit, Stand}
-
+import com.nicoburniske.model.blackjack._
 import com.nicoburniske.view.TextView.handString
 
 object PlayerCLI {
-  val validInput: Map[String, GameAction] = Map("H" -> Hit, "S" -> Stand, "Q" -> Quit)
+  val validInput: Map[String, GameAction] = Map("h" -> Hit, "s" -> Stand, "q" -> Quit, "d" -> Double)
 }
 
 class PlayerCLI extends Player {
@@ -24,6 +23,7 @@ class PlayerCLI extends Player {
          |The user can choose to
          | - Hit by entering an "H"
          | - Stand by entering an "S"
+         | - Double by entering a "D"
          | - Quit by entering a "Q"
          |Best of luck!
       """.stripMargin)
@@ -43,14 +43,24 @@ class PlayerCLI extends Player {
     if (bet > 0 && bet <= bankroll) {
       bet
     } else {
+      println("Bet must be greater than 1, and less than your bankroll")
       handStart(info)
     }
   }
 
 
-  override def informHandResult(won: Boolean, playerHand: Hand, dealerHand: Hand): Boolean = {
+  override def informHandResult(won: Int, playerHand: Hand, dealerHand: Hand): Boolean = {
+    val wonString = {
+      won match {
+        case 1 => "won"
+        case 0 => "tied"
+        case -1 => "lost"
+        case _ => throw new IllegalArgumentException("Won must be between [-1,1]")
+      }
+    }
     val output = {
-      s"You ${if (won) "won!" else "lost"} \n" +
+      s"-------------- Hand Result ------------\n" +
+        s"You $wonString!\n" +
         s"Your hand ${handString(playerHand)}\n" +
         s"Dealer's hand ${handString(dealerHand)}"
     }
@@ -81,18 +91,20 @@ class PlayerCLI extends Player {
   }
 
   override def getHandAction(player: GamePlayer, dealer: Hand): GameAction = {
-    val prompt = "Current table state:\n" +
+    val prompt = "----------Current table state------------\n" +
       s"Dealer card: ${handString(dealer)}\n" +
       s"Player cards: ${handString(player.hand)}\n" +
-      s"Please enter a move: Hit (h), Stay (s), Quit (q)"
+      s"Please enter a move: Hit (h), Stand (s), Quit (q), Double (d)\n"
     //TODO add more info
     val input = scala.io.StdIn.readLine(prompt)
 
-    PlayerCLI.validInput.get(input) match {
+    PlayerCLI.validInput.get(input.toLowerCase) match {
       case Some(value) => value
       case None =>
         println("Invalid action")
         getHandAction(player, dealer)
     }
   }
+
+
 }

@@ -25,10 +25,10 @@ object TextView extends BlackjackView[String] {
   }
 
   def handString(hand: Hand): String = {
-    s"${hand.cards.map(cardString).mkString(" ")} : ${hand.bestValue.getOrElse(-1)}"
+    s"${hand.cards.map(cardString).mkString(", ")} : ${hand.bestValue.getOrElse(hand.topValue)}"
   }
 
   def cardString(card: Card): String = {
-    s"${suiteString(card.suit)} - ${rankString(card.rank)}"
+    s"${rankString(card.rank)} ${suiteString(card.suit)}"
   }
 }

@@ -8,6 +8,6 @@ trait Player {
   def handStart(info: PlayerView): Int
   def informOtherPlayerMove(info: PlayerView): Boolean
   def getHandAction(playerInfo: GamePlayer, dealer: Hand): GameAction
-  def informHandResult(won: Boolean, playerHand: Hand, dealerHand: Hand): Boolean
+  def informHandResult(won: Int, playerHand: Hand, dealerHand: Hand): Boolean
   def gameEnd(endScore: Int): Boolean
 }

@@ -10,12 +10,20 @@ case class GamePlayer(hand: Hand, score: Int, bet: Option[Int]) {
     GamePlayer(this.hand.addCard(card), this.score, bet)
   }
 
-  def updateScore(won: Boolean): GamePlayer = {
-    val newScore = {
-      if (won)
-        score + bet.getOrElse(0)
-      else
-        score - bet.getOrElse(0)
+  def isBroke: Boolean = this.score <= 0
+
+  /**
+   * Updates the players score based on the bet placed. Bet also gets erased
+    * @param won -1 if lost, 0 if tied, 1 if won
+   * @return a new player with updated attributes
+   */
+  def updateScore(won: Int): GamePlayer = {
+    val betValue = this.bet.getOrElse(0)
+    val newScore = won match {
+      case 1 => score + 2 * betValue
+      case -1 => score
+      case 0 => score + betValue
+      case _ => throw new IllegalArgumentException("Won must be between [-1, 1]")
     }
     GamePlayer(hand, newScore, None)
   }
@@ -40,7 +48,9 @@ class BlackjackModel(val dealer: Hand,
             val newPlayer = this.players(playerIndex).addToHand(card)
             val newPlayers = this.players.updated(playerIndex, newPlayer)
             Some(new BlackjackModel(this.dealer, newPlayers, newDeck, this.deckCount))
-          case None => None
+          case None =>
+            // TODO: Ensure that this is supposed to happen
+            this.resetDeck.playerAction(playerIndex, action)
         }
       case Stand =>
         Some(this)
@@ -52,12 +62,13 @@ class BlackjackModel(val dealer: Hand,
           case Some(value) =>
             val newPlayer = GamePlayer(oldPlayer.hand, oldPlayer.score, Some(value * 2))
             val newPlayers = this.players.updated(playerIndex, newPlayer)
-            Some(new BlackjackModel(this.dealer, newPlayers, this.deck, this.deckCount))
+            val newState = new BlackjackModel(this.dealer, newPlayers, this.deck, this.deckCount)
+            Some(newState.playerAction(playerIndex, Hit).get)
           case None => None
         }
       case Quit =>
         val newPlayers = this.players.take(playerIndex) ++ this.players.drop(playerIndex + 1)
-        Some(new BlackjackModel(this.dealer, newPlayers, this.deck, this.deckCount))
+        Some(this.updatePlayers(newPlayers))
     }
   }
 
@@ -72,6 +83,10 @@ class BlackjackModel(val dealer: Hand,
 
   def resetHand: BlackjackModel = {
     new BlackjackModel(Hand(), players.map(_.resetHand), deck, this.deckCount)
+  }
+
+  def resetDeck: BlackjackModel = {
+    new BlackjackModel(this.dealer, this.players, Deck(this.deckCount), deckCount)
   }
 
   def resetHandAndDeck: BlackjackModel = {
@@ -108,7 +123,7 @@ class BlackjackModel(val dealer: Hand,
       .map(_._2)
   }
 
-  def updatePlayers(newPlayers :Seq[GamePlayer]): BlackjackModel = {
-    new BlackjackModel(this.dealer, newPlayers.toList,this.deck, this.deckCount)
+  def updatePlayers(newPlayers: Seq[GamePlayer]): BlackjackModel = {
+    new BlackjackModel(this.dealer, newPlayers.toList, this.deck, this.deckCount)
   }
 }

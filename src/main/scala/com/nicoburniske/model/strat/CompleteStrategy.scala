@@ -9,12 +9,14 @@ trait CompleteStrategy {
 
 object HitSoftSeventeen extends CompleteStrategy {
   override def takeTurn(blackjack: BlackjackModel): Option[GameAction] = {
-    (blackjack.dealer.values.length, blackjack.dealer.bestValue) match {
+    val result = (blackjack.dealer.values.length, blackjack.dealer.bestValue) match {
       case (len, Some(17)) if len > 1 => Some(Hit) // hit on soft 17
       case (_, Some(best)) if best > 16 => Some(Stand)
-      case (_, _) => Some(Hit)
+      case (_, Some(best)) if best <= 16 => Some(Hit)
+      case (_, None) => Some(Stand)
       case _ => None
     }
+    result
   }
 }
 
