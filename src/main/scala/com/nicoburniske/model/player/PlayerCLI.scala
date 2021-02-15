@@ -1,10 +1,12 @@
 package com.nicoburniske.model.player
 
 import com.nicoburniske.model.blackjack._
+import com.nicoburniske.model.ref.BlackjackHistory
 import com.nicoburniske.view.TextView.handString
 
 object PlayerCLI {
-  val validInput: Map[String, GameAction] = Map("h" -> Hit, "s" -> Stand, "q" -> Quit, "d" -> Double)
+  val validInput: Map[String, GameAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double)
+  val quitString: String = "q"
 }
 
 class PlayerCLI extends Player {
@@ -31,23 +33,31 @@ class PlayerCLI extends Player {
     true
   }
 
-  override def handStart(info: PlayerView): Int = {
-    def getInput(bankroll: Int): Int = {
-      println(s"Please enter your starting bet (Min 1). Current bankroll: $bankroll.")
-      scala.io.StdIn.readInt()
+  override def handStart(info: PlayerView): Option[Int] =  {
+    def getInput(bankroll: Int): String = {
+      scala.io.StdIn.readLine(s"Please enter your starting bet (Min 1). Current bankroll: $bankroll.\n")
     }
 
     println("---------------- Starting New Hand ----------------")
     val bankroll = info.players(this.position.get).score
-    val bet = getInput(bankroll)
-    if (bet > 0 && bet <= bankroll) {
-      bet
-    } else {
-      println("Bet must be greater than 1, and less than your bankroll")
-      handStart(info)
+    val response = getInput(bankroll)
+    response.toIntOption match {
+      case Some(bet) =>
+        if (bet > 0 && bet <= bankroll) {
+          Some(bet)
+        } else {
+          println("Bet must be greater than 1, and less than your bankroll")
+          handStart(info)
+        }
+      case None =>
+        if (response.toLowerCase == PlayerCLI.quitString) {
+          None
+        } else {
+          println("Invalid input")
+          handStart(info)
+        }
     }
   }
-
 
   override def informHandResult(won: Int, playerHand: Hand, dealerHand: Hand): Boolean = {
     val wonString = {
@@ -61,17 +71,17 @@ class PlayerCLI extends Player {
     val output = {
       s"-------------- Hand Result ------------\n" +
         s"You $wonString!\n" +
-        s"Your hand ${handString(playerHand)}\n" +
-        s"Dealer's hand ${handString(dealerHand)}"
+        s"Dealer's hand ${handString(dealerHand)}\n" +
+        s"Your hand ${handString(playerHand)}"
     }
     println(output)
     true
   }
 
-
-  override def gameEnd(endScore: Int): Boolean = {
+  override def gameEnd(endScore: Int, history: BlackjackHistory): Boolean = {
     println("---------------   Game Over  ----------------------")
     println(s"You left the casino with $endScore sheckles")
+    println(s"You won ${history.winCount}times, You lost ${history.lossCount} times, You tied ${history.tieCount} times")
     true
   }
 
@@ -93,8 +103,8 @@ class PlayerCLI extends Player {
   override def getHandAction(player: GamePlayer, dealer: Hand): GameAction = {
     val prompt = "----------Current table state------------\n" +
       s"Dealer card: ${handString(dealer)}\n" +
-      s"Player cards: ${handString(player.hand)}\n" +
-      s"Please enter a move: Hit (h), Stand (s), Quit (q), Double (d)\n"
+      s"Your hand: ${handString(player.hand)}\n" +
+      s"Please enter a move: Hit (h), Stand (s), Double (d)\n"
     //TODO add more info
     val input = scala.io.StdIn.readLine(prompt)
 
@@ -105,6 +115,4 @@ class PlayerCLI extends Player {
         getHandAction(player, dealer)
     }
   }
-
-
 }

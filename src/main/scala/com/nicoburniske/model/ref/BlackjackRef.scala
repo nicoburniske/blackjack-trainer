@@ -12,22 +12,17 @@ case class BlackjackState(players: List[Player], model: BlackjackModel, history:
     BlackjackState(this.players.take(index) ++ this.players.drop(index + 1), model, history)
   }
 
-  def updateModel(newModel: BlackjackModel): BlackjackState = {
-    BlackjackState(players, newModel, history)
-  }
-
-  def updatePlayers(newPlayers: Seq[Player]): BlackjackState = {
-    // BlackjackState(newPlayers.toList, this.model, this.history)
-    this.copy(players=newPlayers.toList)
-  }
-
   def addChoice(playerIndex: Int, state: BlackjackModel, choice: GameAction): BlackjackState = {
     val playerHistory = this.history(playerIndex)
     this.copy(history = this.history.updated(playerIndex, playerHistory.addChoice(state, choice)))
   }
 }
 
-case class BlackjackHistory(choices: ListMap[BlackjackModel, GameAction] = ListMap.empty, results: List[Int]) {
+case class BlackjackHistory(choices: ListMap[BlackjackModel, GameAction] = ListMap.empty, results: List[Int] = Nil) {
+  val winCount: Int = results.count(_ > 0)
+  val lossCount: Int = results.count(_ < 0)
+  val tieCount: Int = results.count(_ == 0)
+
   def addHandResult(won: Int): BlackjackHistory = {
     BlackjackHistory(this.choices, won :: this.results)
   }
@@ -35,6 +30,7 @@ case class BlackjackHistory(choices: ListMap[BlackjackModel, GameAction] = ListM
   def addChoice(state: BlackjackModel, choice: GameAction): BlackjackHistory = {
     BlackjackHistory(this.choices + (state -> choice), this.results)
   }
+
 }
 
 object BlackjackRef {
@@ -55,10 +51,10 @@ object BlackjackRef {
       val newStatePlayerView = toPlayerView(newModel)
       val betPlayers = (state.players zip newModel.players).map { case (player, gamePlayer) =>
         // TODO: confirm that the input is valid. Could be betting over
-        val bet = player.handStart(newStatePlayerView)
+        val bet = player.handStart(newStatePlayerView).get // TODO: ensure that the player hasn't quit
         GamePlayer(gamePlayer.hand, gamePlayer.score - bet, Some(bet))
       }
-      val newState = state.updateModel(newModel.updatePlayers(betPlayers))
+      val newState = state.copy(model = newModel.updatePlayers(betPlayers))
       val afterPlayersMoveState = newState.players.zipWithIndex.foldLeft(newState) {
         case (currState, (_: Player, index: Int)) =>
           val otherPlayers = newState.players.zipWithIndex.filter(tuple => tuple._2 != index).map(_._1)
@@ -71,17 +67,22 @@ object BlackjackRef {
   }
 
   def filterLosers(state: BlackjackState): BlackjackState = {
-    (state.players zip state.model.players).foreach { case (player, gamePlayer) =>
+    (state.players zip state.model.players).zipWithIndex.foreach { case ((player, gamePlayer), index) =>
       if (gamePlayer.isBroke) {
-        player.gameEnd(0)
+        player.gameEnd(gamePlayer.score, state.history(index))
       }
     }
-    val remaining = (state.players zip state.model.players).filter { case (_, gamePlayer) =>
-      !gamePlayer.isBroke
-    }
-    val newModel = state.model.updatePlayers(remaining.map(_._2))
+    val brokePlayers = state.model.players.zipWithIndex
+      .filter { case (gamePlayer, index) => gamePlayer.isBroke }
+      .map(_._2)
+
+    val newPlayers = (state.players zip state.model.players).zipWithIndex
+      .filter { case ((_, _), index) => !brokePlayers.contains(index) }
+      .map(_._1)
+
     // update model and players remaining
-    state.updateModel(newModel).updatePlayers(remaining.map(_._1))
+    val newModel = state.model.updatePlayers(newPlayers.map(_._2))
+    state.copy(model = newModel, players = newPlayers.map(_._1))
   }
 
   def informPlayers(state: BlackjackState): BlackjackState = {
@@ -91,8 +92,7 @@ object BlackjackRef {
       player.informHandResult(won, gamePlayer.hand, dealer)
       gamePlayer.updateScore(won)
     }
-    val newModel = state.model.updatePlayers(gamePlayers)
-    state.updateModel(newModel)
+    state.copy(model = state.model.updatePlayers(gamePlayers))
   }
 
   def drawDealer(state: BlackjackState, strat: CompleteStrategy): BlackjackState = {
@@ -105,7 +105,7 @@ object BlackjackRef {
             case Some(action) =>
               state.model.dealerAction(action) match {
                 case Some(newModel) =>
-                  continueTillStand(state.updateModel(newModel), action)
+                  continueTillStand(state.copy(model = newModel), action)
                 case None => state
               }
             // TODO: log this?
@@ -130,19 +130,19 @@ object BlackjackRef {
       state
     } else {
       val action = currentPlayer.getHandAction(currentGamePlayer, state.model.dealer.hideAllButFirst)
-      // state.history(playerIndex).copy()
+      val newState = state.addChoice(playerIndex, state.model, action)
       this.validAction(state.model, action, playerIndex) match {
-        case Some(newState) =>
-          otherPlayers.map(_.informOtherPlayerMove(toPlayerView(newState)))
+        case Some(newModel) =>
+          otherPlayers.map(_.informOtherPlayerMove(toPlayerView(newModel)))
           action match {
             case Stand =>
-              state.updateModel(newState)
+              newState.copy(model = newModel)
             case Hit =>
-              this.singleTurn(state.updateModel(newState), playerIndex, otherPlayers)
+              this.singleTurn(newState.copy(model = newModel), playerIndex, otherPlayers)
             case Quit =>
-              state.updateModel(newState).removePlayer(playerIndex)
+              newState.copy(model = newModel).removePlayer(playerIndex)
             case _ =>
-              state.updateModel(newState)
+              newState.copy(model = newModel)
             // TODO finish processing all gameactions
           }
         case _ => throw new IllegalStateException("Invalid action requested")
@@ -152,8 +152,9 @@ object BlackjackRef {
 
   private def initState(players: List[Player]): BlackjackState = {
     val gamePlayers = players.map(_ => GamePlayer(Hand(), 100, None))
+    val playerHistory = players.map(_ => BlackjackHistory())
     val blackjack = new BlackjackModel(Hand(), gamePlayers, Deck(6), 6)
-    BlackjackState(players, blackjack, Nil)
+    BlackjackState(players, blackjack, playerHistory)
   }
 
   private def toPlayerView(model: BlackjackModel): PlayerView = {

@@ -13,7 +13,7 @@ case class GamePlayer(hand: Hand, score: Int, bet: Option[Int]) {
   def isBroke: Boolean = this.score <= 0
 
   /**
-   * Updates the players score based on the bet placed. Bet also gets erased
+   * Updates the players score based on the bet placed. Bet also gets reset
     * @param won -1 if lost, 0 if tied, 1 if won
    * @return a new player with updated attributes
    */
@@ -60,15 +60,19 @@ class BlackjackModel(val dealer: Hand,
         val oldPlayer = this.players(playerIndex)
         oldPlayer.bet match {
           case Some(value) =>
-            val newPlayer = GamePlayer(oldPlayer.hand, oldPlayer.score, Some(value * 2))
-            val newPlayers = this.players.updated(playerIndex, newPlayer)
-            val newState = new BlackjackModel(this.dealer, newPlayers, this.deck, this.deckCount)
-            Some(newState.playerAction(playerIndex, Hit).get)
+            val newBet = value * 2
+            val newScore = oldPlayer.score - value
+            if (newScore > -1) {
+              val newPlayer = GamePlayer(oldPlayer.hand, newScore, Some(newBet))
+              val newPlayers = this.players.updated(playerIndex, newPlayer)
+              val newState = new BlackjackModel(this.dealer, newPlayers, this.deck, this.deckCount)
+              Some(newState.playerAction(playerIndex, Hit).get)
+            } else {
+              None
+            }
           case None => None
         }
-      case Quit =>
-        val newPlayers = this.players.take(playerIndex) ++ this.players.drop(playerIndex + 1)
-        Some(this.updatePlayers(newPlayers))
+
     }
   }
 
@@ -121,6 +125,11 @@ class BlackjackModel(val dealer: Hand,
     this.players.zipWithIndex
       .filter(tuple => tuple._1.hand.bestValue.isDefined)
       .map(_._2)
+  }
+
+  def removePlayer(index: Int): BlackjackModel = {
+      val newPlayers = this.players.take(index) ++ this.players.drop(index + 1)
+      this.updatePlayers(newPlayers)
   }
 
   def updatePlayers(newPlayers: Seq[GamePlayer]): BlackjackModel = {
