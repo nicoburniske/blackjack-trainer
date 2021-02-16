@@ -3,11 +3,22 @@ package com.nicoburniske.model.blackjack
 import scala.util.Random
 
 object Deck {
-  def apply(numDecks: Int): Deck = {
-    val cards: List[Card] = (0 until numDecks).flatMap(_ => Random.shuffle(COMPLETE_DECK)).toList
-    new Deck(cards)
+  /**
+   * Creates a deck containing the cards of n complete decks.
+   *
+   * @param n the number of decks to include
+   * @return the deck with n * 52 cards
+   */
+  def apply(n: Int): Deck = {
+    new Deck((0 until n).flatMap(_ => Random.shuffle(COMPLETE_DECK)).toList)
   }
 
+  /**
+   * Var args constructor for a deck.
+   *
+   * @param cards the cards to be included in the deck
+   * @return the new Deck
+   */
   def apply(cards: Card*): Deck = {
     new Deck(cards.toList)
   }

@@ -1,8 +1,11 @@
 package com.nicoburniske.model.blackjack
 
-sealed trait GameAction
-case object Hit extends GameAction
-case object Stand extends GameAction
-case object Split extends GameAction
-case object Double extends GameAction
-case object Quit extends GameAction
+/**
+ * Represents an action that can be executed by a player or dealer in a game of Blackjack
+ */
+sealed trait DealerAction
+sealed trait PlayerAction
+case object Hit extends PlayerAction with DealerAction
+case object Stand extends PlayerAction with DealerAction
+case object Split extends PlayerAction
+case object Double extends PlayerAction

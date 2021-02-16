@@ -32,4 +32,3 @@ case object Ace extends Rank(List(1, 11))
  * Represents a card
  */
 case class Card(suit: Suit, rank: Rank)
-

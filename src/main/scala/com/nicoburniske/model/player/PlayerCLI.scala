@@ -5,17 +5,21 @@ import com.nicoburniske.model.ref.BlackjackHistory
 import com.nicoburniske.view.TextView.handString
 
 object PlayerCLI {
-  val validInput: Map[String, GameAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double)
+  val validInput: Map[String, PlayerAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double)
   val quitString: String = "q"
 }
 
-class PlayerCLI extends Player {
+/**
+ * Represents a player that can play Blackjack from the console.
+ */
+class PlayerCLI extends TablePlayer {
 
+  // the position of the player at the table
   private var position: Option[Int] = None
 
-  override def gameStart(id: Int): Boolean = {
+  override def gameStart(): Boolean = {
     println(
-      s"""Welcome to BlackJack game Player $id!
+      s"""Welcome to BlackJack!
          |------------------------------------------
          |The game starts by dealing out two cards each to the player and dealer.
          |A score of 21 wins the game for the player or dealer. In the event of a tie, the dealer wins.
@@ -29,17 +33,20 @@ class PlayerCLI extends Player {
          | - Quit by entering a "Q"
          |Best of luck!
       """.stripMargin)
-    this.position = Some(id)
     true
   }
 
-  override def handStart(info: PlayerView): Option[Int] =  {
+  override def setPlayerPosition(position: Int): Boolean = {
+    this.position = Some(position)
+    true
+  }
+
+  override def handStart(bankroll: Int): Option[Int] = {
     def getInput(bankroll: Int): String = {
-      scala.io.StdIn.readLine(s"Please enter your starting bet (Min 1). Current bankroll: $bankroll.\n")
+      scala.io.StdIn.readLine(s"Please enter your starting bet (min 1) or quit (q). Current bankroll: $bankroll.\n")
     }
 
     println("---------------- Starting New Hand ----------------")
-    val bankroll = info.players(this.position.get).score
     val response = getInput(bankroll)
     response.toIntOption match {
       case Some(bet) =>
@@ -47,14 +54,14 @@ class PlayerCLI extends Player {
           Some(bet)
         } else {
           println("Bet must be greater than 1, and less than your bankroll")
-          handStart(info)
+          handStart(bankroll)
         }
       case None =>
         if (response.toLowerCase == PlayerCLI.quitString) {
           None
         } else {
           println("Invalid input")
-          handStart(info)
+          handStart(bankroll)
         }
     }
   }
@@ -71,8 +78,8 @@ class PlayerCLI extends Player {
     val output = {
       s"-------------- Hand Result ------------\n" +
         s"You $wonString!\n" +
-        s"Dealer's hand ${handString(dealerHand)}\n" +
-        s"Your hand ${handString(playerHand)}"
+        s"Dealer's hand: ${handString(dealerHand)}\n" +
+        s"Your hand: ${handString(playerHand)}"
     }
     println(output)
     true
@@ -81,7 +88,7 @@ class PlayerCLI extends Player {
   override def gameEnd(endScore: Int, history: BlackjackHistory): Boolean = {
     println("---------------   Game Over  ----------------------")
     println(s"You left the casino with $endScore sheckles")
-    println(s"You won ${history.winCount}times, You lost ${history.lossCount} times, You tied ${history.tieCount} times")
+    println(s"You won ${history.winCount} times, You lost ${history.lossCount} times, You tied ${history.tieCount} times")
     true
   }
 
@@ -100,7 +107,7 @@ class PlayerCLI extends Player {
     builder.toString
   }
 
-  override def getHandAction(player: GamePlayer, dealer: Hand): GameAction = {
+  override def getHandAction(player: GamePlayer, dealer: Hand): PlayerAction = {
     val prompt = "----------Current table state------------\n" +
       s"Dealer card: ${handString(dealer)}\n" +
       s"Your hand: ${handString(player.hand)}\n" +

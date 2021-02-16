@@ -12,7 +12,7 @@ object TextView extends BlackjackView[String] {
 
   override def toView(state: BlackjackModel): String = {
     val builder = new StringBuilder()
-    val dealerCards = state.dealer.cards.headOption match {
+    val dealerCards = state.dealerHand.cards.headOption match {
       case Some(value) => s"${this.cardString(value)} __"
       case None => new IllegalArgumentException("Dealer's hand cannot be empty")
     }
@@ -25,7 +25,7 @@ object TextView extends BlackjackView[String] {
   }
 
   def handString(hand: Hand): String = {
-    s"${hand.cards.map(cardString).mkString(", ")} : ${hand.bestValue.getOrElse(hand.topValue)}"
+    s"${hand.cards.map(cardString).mkString(", ")} | ${hand.bestValue.getOrElse(hand.values.min)}"
   }
 
   def cardString(card: Card): String = {

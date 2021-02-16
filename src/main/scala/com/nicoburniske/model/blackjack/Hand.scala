@@ -4,10 +4,16 @@ object Hand {
   val WINNING_SCORE = 21
   val MIN_CARDS = 2
 
+  /**
+   * Alternate constructor for an empty hand.
+   */
   def apply(): Hand = {
     Hand(Nil)
   }
 
+  /**
+   * Alternate var-args constructor for a non-empty hand.
+   */
   def apply(cards: Card*): Hand = {
     Hand(cards.toList)
   }
@@ -28,7 +34,7 @@ case class Hand(cards: List[Card]) {
    * Computes all possible values of the hand.
    * Returns a List containing 0 if there are no cards in the hand
    */
-  def values: List[Int] = {
+  val values: List[Int] = {
     this.cards.foldLeft(List(0)) { (acc, card) =>
       for {
         possibleSum <- acc
@@ -50,12 +56,9 @@ case class Hand(cards: List[Card]) {
       .reduceOption(_ max _)
   }
 
-  def topValue: Int = {
-    this.values.max
-  }
 
   /**
-   * Finds the stronger hand
+   * Finds the stronger hand.
    *
    * @param dealer the other hand
    * @return
@@ -72,12 +75,22 @@ case class Hand(cards: List[Card]) {
     }
   }
 
+  /**
+   * Determines if the hand can be dealt another card.
+   */
   def canHit: Boolean = {
     !this.bestValue.contains(Hand.WINNING_SCORE) && this.values.exists(_ < Hand.WINNING_SCORE)
   }
 
-  def dealFromDeck(deck: Deck, numCards: Int): (Deck, Hand) = {
-    (0 until numCards).foldLeft((deck, this)) { (acc, _) =>
+  /**
+   * Deals the specified number of cards to the current hand.
+   *
+   * @param deck     the deck to deal cards from
+   * @param n the number of cards to deal
+   * @return (new Deck, new Hand)
+   */
+  def dealFromDeck(deck: Deck, n: Int): (Deck, Hand) = {
+    (0 until n).foldLeft((deck, this)) { (acc, _) =>
       acc._1.dealCard match {
         case Some((card, newDeck)) => (newDeck, acc._2.addCard(card))
         case None => acc
@@ -85,6 +98,11 @@ case class Hand(cards: List[Card]) {
     }
   }
 
+  /**
+   * Creates a new Hand only containing the first card of the current hand.
+   *
+   * @return a new Hand
+   */
   def hideAllButFirst: Hand = {
     if (this.cards.isEmpty) {
       this
