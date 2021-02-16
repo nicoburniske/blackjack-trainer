@@ -85,14 +85,14 @@ case class Hand(cards: List[Card]) {
   /**
    * Deals the specified number of cards to the current hand.
    *
-   * @param deck     the deck to deal cards from
-   * @param n the number of cards to deal
-   * @return (new Deck, new Hand)
+   * @param shoe the shoe to deal cards from
+   * @param n    the number of cards to deal
+   * @return (new Shoe, new Hand)
    */
-  def dealFromDeck(deck: Deck, n: Int): (Deck, Hand) = {
-    (0 until n).foldLeft((deck, this)) { (acc, _) =>
+  def dealFromShoe(shoe: Shoe, n: Int): (Shoe, Hand) = {
+    (0 until n).foldLeft((shoe, this)) { (acc, _) =>
       acc._1.dealCard match {
-        case Some((card, newDeck)) => (newDeck, acc._2.addCard(card))
+        case Some((card, newShoe)) => (newShoe, acc._2.addCard(card))
         case None => acc
       }
     }

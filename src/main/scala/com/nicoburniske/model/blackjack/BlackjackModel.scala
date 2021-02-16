@@ -73,13 +73,13 @@ case class GamePlayer(hand: Hand, score: Int, bet: Option[Int]) {
   /**
    * Deals the specified number of cards to the current players hand.
    *
-   * @param deck the deck to deal cards from
+   * @param shoe the shoe to deal cards from
    * @param n    the number of cards to deal
-   * @return (new Deck, new Player)
+   * @return (new Shoe, new Player)
    */
-  def dealFromDeck(deck: Deck, n: Int): (Deck, GamePlayer) = {
-    val (newDeck, newHand) = this.hand.dealFromDeck(deck, n)
-    (newDeck, GamePlayer(newHand, this.score, this.bet))
+  def dealFromDeck(shoe: Shoe, n: Int): (Shoe, GamePlayer) = {
+    val (newShoe, newHand) = this.hand.dealFromShoe(shoe, n)
+    (newShoe, GamePlayer(newHand, this.score, this.bet))
   }
 }
 
@@ -89,12 +89,12 @@ case class GamePlayer(hand: Hand, score: Int, bet: Option[Int]) {
  *
  * @param dealerHand the dealer's current Hand
  * @param players    the players involved in the game
- * @param deck       the current deck
+ * @param shoe       the cards
  * @param deckCount  the number of decks that are shuffled at once
  */
 class BlackjackModel(val dealerHand: Hand,
                      val players: List[GamePlayer],
-                     val deck: Deck,
+                     val shoe: Shoe,
                      val deckCount: Int) {
   /**
    * Perform the action for the player at the given index.
@@ -106,14 +106,14 @@ class BlackjackModel(val dealerHand: Hand,
   def playerAction(playerIndex: Int, action: PlayerAction): Option[BlackjackModel] = {
     action match {
       case Hit =>
-        deck.dealCard match {
-          case Some((card, newDeck)) =>
+        shoe.dealCard match {
+          case Some((card, newShoe)) =>
             val newPlayer = this.players(playerIndex).addToHand(card)
             val newPlayers = this.players.updated(playerIndex, newPlayer)
-            Some(new BlackjackModel(this.dealerHand, newPlayers, newDeck, this.deckCount))
+            Some(new BlackjackModel(this.dealerHand, newPlayers, newShoe, this.deckCount))
           case None =>
             // TODO: Ensure that this is supposed to happen
-            this.resetDeck.playerAction(playerIndex, action)
+            this.resetShoe.playerAction(playerIndex, action)
         }
       case Stand =>
         Some(this)
@@ -123,7 +123,7 @@ class BlackjackModel(val dealerHand: Hand,
         this.players(playerIndex).doubleBet match {
           case Some(newPlayer) =>
             val newPlayers = this.players.updated(playerIndex, newPlayer)
-            val newState = new BlackjackModel(this.dealerHand, newPlayers, this.deck, this.deckCount)
+            val newState = new BlackjackModel(this.dealerHand, newPlayers, this.shoe, this.deckCount)
             Some(newState.playerAction(playerIndex, Hit).get) // if double then the player must hit
           case None => None
         }
@@ -137,10 +137,10 @@ class BlackjackModel(val dealerHand: Hand,
    * @return the updated game state i the action could be performed, None otherwise
    */
   def dealerAction(action: DealerAction): Option[BlackjackModel] = {
-    (action, this.deck.dealCard) match {
+    (action, this.shoe.dealCard) match {
       case (Hit, Some((card, deck))) =>
         Some(new BlackjackModel(this.dealerHand.addCard(card), players, deck, this.deckCount))
-      case (Hit, None) => this.resetDeck.dealerAction(action) // TODO: should the deck be reset like this?
+      case (Hit, None) => this.resetShoe.dealerAction(action) // TODO: should the deck be reset like this?
       case (Stand, _) => Some(this)
       case (_, _) => None
     }
@@ -152,25 +152,25 @@ class BlackjackModel(val dealerHand: Hand,
    * @return the updated game state
    */
   def resetHand: BlackjackModel = {
-    new BlackjackModel(Hand(), players.map(_.resetHand), deck, this.deckCount)
+    new BlackjackModel(Hand(), players.map(_.resetHand), shoe, this.deckCount)
   }
 
   /**
-   * Resets the deck.
+   * Resets the Shoe.
    *
    * @return the updated game state
    */
-  def resetDeck: BlackjackModel = {
-    new BlackjackModel(this.dealerHand, this.players, Deck(this.deckCount), deckCount)
+  def resetShoe: BlackjackModel = {
+    new BlackjackModel(this.dealerHand, this.players, Shoe(this.deckCount), deckCount)
   }
 
   /**
-   * Resets the dealer's hand and each of the player's hands. Also resets the deck to have n shuffled decks.
+   * Resets the dealer's hand and each of the player's hands. Also resets the Shoe to have n shuffled decks.
    *
    * @return the updated game state
    */
-  def resetHandAndDeck: BlackjackModel = {
-    new BlackjackModel(Hand(), players.map(_.resetHand), Deck(this.deckCount), deckCount)
+  def resetHandAndShoe: BlackjackModel = {
+    new BlackjackModel(Hand(), players.map(_.resetHand), Shoe(this.deckCount), deckCount)
   }
 
   /**
@@ -179,16 +179,16 @@ class BlackjackModel(val dealerHand: Hand,
    * @return the updated game state
    */
   def startHand: BlackjackModel = {
-    if (this.deck.cards.length > Hand.MIN_CARDS * (this.players.length + 1)) {
+    if (this.shoe.cards.length > Hand.MIN_CARDS * (this.players.length + 1)) {
       val newHand = this.resetHand
-      val (newDeck, newPlayers) = newHand.players.foldLeft((newHand.deck, List.empty[GamePlayer])) { (acc, player) =>
+      val (newShoe, newPlayers) = newHand.players.foldLeft((newHand.shoe, List.empty[GamePlayer])) { (acc, player) =>
         val afterAdd = player.dealFromDeck(acc._1, Hand.MIN_CARDS)
         (afterAdd._1, afterAdd._2 :: acc._2)
       }
-      val (deckAfterDealer, dealerHand) = Hand().dealFromDeck(newDeck, Hand.MIN_CARDS)
-      new BlackjackModel(dealerHand, newPlayers, deckAfterDealer, this.deckCount)
+      val (shoeAfterDealer, dealerHand) = Hand().dealFromShoe(newShoe, Hand.MIN_CARDS)
+      new BlackjackModel(dealerHand, newPlayers, shoeAfterDealer, this.deckCount)
     } else {
-      this.resetHandAndDeck.startHand
+      this.resetHandAndShoe.startHand
     }
   }
 
@@ -220,6 +220,6 @@ class BlackjackModel(val dealerHand: Hand,
    * @return the updated game state
    */
   def updatePlayers(newPlayers: Seq[GamePlayer]): BlackjackModel = {
-    new BlackjackModel(this.dealerHand, newPlayers.toList, this.deck, this.deckCount)
+    new BlackjackModel(this.dealerHand, newPlayers.toList, this.shoe, this.deckCount)
   }
 }

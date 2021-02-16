@@ -1,15 +1,15 @@
 package com.nicoburniske.model.strat
 
-import com.nicoburniske.model.blackjack.{BlackjackModel, DealerAction, Hit, Stand}
+import com.nicoburniske.model.blackjack.{BlackjackModel, DealerAction, Hit, Stand, Hand}
 
 
 trait DealerStrategy {
-  def takeTurn(blackjack: BlackjackModel): Option[DealerAction]
+  def takeTurn(hand: Hand): Option[DealerAction]
 }
 
 object HitSoftSeventeen extends DealerStrategy {
-  override def takeTurn(blackjack: BlackjackModel): Option[DealerAction] = {
-    val result = (blackjack.dealerHand.values.length, blackjack.dealerHand.bestValue) match {
+  override def takeTurn(hand: Hand): Option[DealerAction] = {
+    val result = (hand.values.length, hand.bestValue) match {
       case (len, Some(17)) if len > 1 => Some(Hit) // hit on soft 17
       case (_, Some(best)) if best > 16 => Some(Stand)
       case (_, Some(best)) if best <= 16 => Some(Hit)
@@ -20,8 +20,8 @@ object HitSoftSeventeen extends DealerStrategy {
 }
 
 object StandSoftSeventeen extends DealerStrategy {
-  override def takeTurn(blackjack: BlackjackModel): Option[DealerAction] = {
-    blackjack.dealerHand.bestValue match {
+  override def takeTurn(hand: Hand): Option[DealerAction] = {
+    hand.bestValue match {
       case Some(best) if best > 16 => Some(Stand)
       case Some(_) => Some(Hit)
       case _ => None

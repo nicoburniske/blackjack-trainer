@@ -1,7 +1,7 @@
 package com.nicoburniske.model.player
 
 import com.nicoburniske.model.blackjack._
-import com.nicoburniske.model.ref.BlackjackHistory
+import com.nicoburniske.model.table.BlackjackHistory
 import com.nicoburniske.view.TextView.handString
 
 object PlayerCLI {
