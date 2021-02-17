@@ -25,6 +25,10 @@ case class GamePlayer(hand: Hand, score: Int, bet: Option[Int]) {
     potentialBet > 0 && potentialBet <= score
   }
 
+  def surrender: GamePlayer = {
+    GamePlayer(hand, score + (this.bet.getOrElse(0) / 2), None)
+  }
+
   /**
    * Returns a player with a doubled bet if possible.
    *
@@ -127,6 +131,10 @@ class BlackjackModel(val dealerHand: Hand,
             Some(newState.playerAction(playerIndex, Hit).get) // if double then the player must hit
           case None => None
         }
+      case Surrender =>
+        val newPlayer = this.players(playerIndex).surrender
+        val newPlayers = this.players.updated(playerIndex, newPlayer)
+        Some(new BlackjackModel(this.dealerHand, newPlayers, this.shoe, this.deckCount))
     }
   }
 

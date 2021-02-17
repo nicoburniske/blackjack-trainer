@@ -39,7 +39,7 @@ trait TablePlayer {
   def informOtherPlayerMove(info: PlayerView): Boolean
 
   /**
-   * Requests a move from the player
+   * Requests a move from the player.
    *
    * @param playerInfo the player's current state
    * @param dealer     the dealer's hand
@@ -48,7 +48,7 @@ trait TablePlayer {
   def getHandAction(playerInfo: GamePlayer, dealer: Hand): PlayerAction
 
   /**
-   * Informs the player of the result of the hand
+   * Informs the player of the result of the hand.
    *
    * @param won        -1 if lost, 0 if tied, 1 if won
    * @param playerHand the player's hand

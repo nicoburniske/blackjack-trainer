@@ -104,7 +104,7 @@ object Blackjack {
    */
   def playGame(players: List[TablePlayer], strat: DealerStrategy): List[BlackjackHistory] = {
     val initialState = this.initState(players)
-    players.zipWithIndex.map { case (player, index) => player.gameStart() }
+    players.foreach(_.gameStart())
     val endState = this.playRound(initialState, strat)
     endState.history
   }
@@ -114,8 +114,8 @@ object Blackjack {
    * Runs a round of Blackjack.
    *
    * Each player must:
-   * - place bets or quit
-   * - draw cards until they bust or Stand
+   * - First place bets or quit
+   * - Then draw cards until they bust or Stand
    *
    * Then the dealer draws cards according to the provided DealerStrategy
    * Then each player is notified of the result of the hand
@@ -238,7 +238,8 @@ object Blackjack {
    * - Gone bust
    *
    * - Also updates the other players with the new state of the table after every action
-   * @param state the current state of the table
+   *
+   * @param state       the current state of the table
    * @param playerIndex the index of the player whose turn it is
    * @return the updated table state
    */
@@ -262,6 +263,8 @@ object Blackjack {
             case Hit =>
               this.singleTurn(newState.copy(model = newModel), playerIndex)
             case Double =>
+              newState.copy(model = newModel)
+            case Surrender =>
               newState.copy(model = newModel)
             case Split =>
               throw new IllegalStateException("Split functionality has not been implemented yet")

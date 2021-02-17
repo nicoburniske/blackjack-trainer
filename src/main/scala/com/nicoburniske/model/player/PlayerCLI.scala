@@ -5,9 +5,9 @@ import com.nicoburniske.model.table.BlackjackHistory
 import com.nicoburniske.view.TextView.handString
 
 object PlayerCLI {
-  val validInput: Map[String, PlayerAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double)
+  val validInput: Map[String, PlayerAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double, "r" -> Surrender)
   val quitString: String = "q"
-  val messageLen = 50
+  val messageSectionLength = 100
 }
 
 /**
@@ -21,17 +21,18 @@ class PlayerCLI extends TablePlayer {
   override def gameStart(): Boolean = {
     println(
       s"""
-         |${this.createOutputString("Welcome to Blackjack!", PlayerCLI.messageLen)}
-         |The game starts by dealing out two cards each to the player and dealer.
-         |A score of 21 wins the game for the player or dealer. In the event of a tie, the dealer wins.
+         |${this.createOutputString("Welcome to Blackjack!", PlayerCLI.messageSectionLength)}
+         |The game starts by dealing out two cards each to each player and dealer.
+         |A score of 21 wins the game for the player or dealer
          |
          |You start with 100 coins
          |You can choose to bet any number of available coins at each hand. Once all the coins are exhausted, the game ends.
          |The user can choose to
-         | - Hit by entering an "H"
-         | - Stand by entering an "S"
-         | - Double by entering a "D"
-         | - Quit by entering a "Q"
+         | - Hit by entering "H"
+         | - Stand by entering "S"
+         | - Double by entering "D"
+         | - Quit by entering "Q"
+         | - Surrender by entering "R"
          |Best of luck!
       """.stripMargin)
     true
@@ -47,7 +48,7 @@ class PlayerCLI extends TablePlayer {
       scala.io.StdIn.readLine(s"Please enter your starting bet (min 1) or quit (q). Current bankroll: $bankroll.\n")
     }
 
-    println(createOutputString("Starting New Hand", PlayerCLI.messageLen))
+    println(createOutputString("Starting New Hand", PlayerCLI.messageSectionLength))
     val response = getInput(bankroll)
     response.toIntOption match {
       case Some(bet) =>
@@ -78,7 +79,7 @@ class PlayerCLI extends TablePlayer {
     }
     val output =
       s"""
-        |${this.createOutputString("Hand Result", PlayerCLI.messageLen)}
+        |${this.createOutputString("Hand Result", PlayerCLI.messageSectionLength)}
         |You $wonString!
         |Dealer's hand: ${handString(dealerHand)}
         |Your hand: ${handString(playerHand)}
@@ -88,7 +89,7 @@ class PlayerCLI extends TablePlayer {
   }
 
   override def gameEnd(endScore: Int, history: BlackjackHistory): Boolean = {
-    println(createOutputString("Game Over", PlayerCLI.messageLen))
+    println(createOutputString("Game Over", PlayerCLI.messageSectionLength))
     println(s"You left the casino with $endScore sheckles")
     println(s"You won ${history.winCount} times, You lost ${history.lossCount} times, You tied ${history.tieCount} times")
     true
@@ -111,10 +112,10 @@ class PlayerCLI extends TablePlayer {
 
   override def getHandAction(player: GamePlayer, dealer: Hand): PlayerAction = {
     val prompt =
-      s"""|${this.createOutputString("Current Table State", PlayerCLI.messageLen)}
+      s"""|${this.createOutputString("Current Table State", PlayerCLI.messageSectionLength)}
          |Dealer card: ${handString(dealer)}
          |Your hand: ${handString(player.hand)}
-         |Please enter a move: Hit (h), Stand (s), Double (d)
+         |Please enter a move: Hit (h), Stand (s), Double (d), or Surrender (r)1
          |""".stripMargin
     //TODO add more info
     val input = scala.io.StdIn.readLine(prompt)
