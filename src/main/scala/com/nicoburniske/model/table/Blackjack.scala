@@ -258,14 +258,10 @@ object Blackjack {
           val playerView = PlayerView(newModel.dealerHand.hideAllButFirst, newModel.players)
           otherPlayers.map(_.informOtherPlayerMove(playerView))
           action match {
-            case Stand =>
+            case Stand | Surrender =>
               newState.copy(model = newModel)
-            case Hit =>
+            case Hit | Double =>
               this.singleTurn(newState.copy(model = newModel), playerIndex)
-            case Double =>
-              newState.copy(model = newModel)
-            case Surrender =>
-              newState.copy(model = newModel)
             case Split =>
               throw new IllegalStateException("Split functionality has not been implemented yet")
             // TODO finish processing all gameactions
