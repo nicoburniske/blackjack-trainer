@@ -7,7 +7,6 @@ val MunitVersion = "0.7.20"
 val LogbackVersion = "1.2.3"
 val MunitCatsEffectVersion = "0.13.0"
 
-name := "blackjack-trainer"
 val MainClass = "com.nicoburniske.blackjack_trainer.main.Main"
 
 lazy val root = (project in file("."))
@@ -18,7 +17,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.4",
     mainClass in(Compile, run) := Some(MainClass),
     libraryDependencies ++= Seq(
-      // "org.scalatic" %% "scalactic" % ScalatestVersion,
+      "org.scalatic" %% "scalactic" % ScalatestVersion,
       "org.scalatest" %% "scalatest" % ScalatestVersion % "test",
       "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % Http4sVersion,

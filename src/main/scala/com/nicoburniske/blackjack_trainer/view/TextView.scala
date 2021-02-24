@@ -1,33 +1,72 @@
 package com.nicoburniske.blackjack_trainer.view
 
-import com.nicoburniske.blackjack_trainer.model.game.{Ace, BlackjackModel, Card, Club, Diamond, Eight, Five, Four, Hand, Heart, Jack, King, Nine, Queen, Rank, Seven, Six, Spade, Suit, Ten, Three, Two}
+import cats.Show
+import cats.syntax.show._
+import com.nicoburniske.blackjack_trainer.model.game._
+import com.nicoburniske.blackjack_trainer.model.player.PlayerView // for show
 
 
 object TextView extends BlackjackView[String] {
-  val suiteString: Map[Suit, String] = Map(Club -> "♣", Diamond -> "♦", Heart -> "♥", Spade ->"♠")
-  val rankString: Map[Rank, String] = Map(Two ->"2", Three -> "3", Four -> "4", Five -> "5", Six -> "6", Seven -> "7",
-  Eight -> "8", Nine -> "9", Ten -> "10", Jack -> "J", Queen -> "Q", King -> "K", Ace -> "A")
-  val noCardString = "__"
 
   override def toView(state: BlackjackModel): String = {
     val builder = new StringBuilder()
     val dealerCards = state.dealerHand.cards.headOption match {
-      case Some(value) => s"${this.cardString(value)} __"
+      case Some(value) => s"${value.show} __"
       case None => new IllegalArgumentException("Dealer's hand cannot be empty")
     }
     builder.append(s"Dealer cards: $dealerCards\n")
     state.players.zipWithIndex.foreach { case (player, ind) =>
-      val hand = this.handString(player.hand)
+      val hand = player.hand.show
       builder.append(s"Player $ind cards: $hand\n")
     }
     builder.toString
   }
 
-  def handString(hand: Hand): String = {
-    s"${hand.cards.map(cardString).mkString(", ")} | ${hand.bestValue.getOrElse(hand.values.min)}"
+  implicit val showSuite: Show[Suit] = {
+    case Club => "♣"
+    case Diamond => "♦"
+    case Heart => "♥"
+    case Spade => "♠"
   }
 
-  def cardString(card: Card): String = {
-    s"${rankString(card.rank)} ${suiteString(card.suit)}"
+  implicit val showRank: Show[Rank] = {
+    case Ace => "A"
+    case King => "K"
+    case Queen => "Q"
+    case Jack => "J"
+    case Ten => "10"
+    case Nine => "9"
+    case Eight => "8"
+    case Seven => "7"
+    case Six => "6"
+    case Five => "5"
+    case Four => "4"
+    case Three => "3"
+    case Two => "2"
+  }
+
+  implicit val showCard: Show[Card] = (c: Card) => {
+    s"${c.rank.show} ${c.suit.show}"
+  }
+
+  implicit val showHand: Show[Hand] = (h: Hand) => {
+    s"${h.cards.map(_.show).mkString(", ")} | ${h.bestValue.getOrElse(h.values.min)}"
+  }
+
+  implicit val showAction: Show[PlayerAction] = {
+    case Hit => "Hit"
+    case Stand => "Stand"
+    case Split => "Split"
+    case Double => "Double"
+    case Surrender => "Surrender"
+  }
+
+  implicit val showPlayerView: Show[PlayerView] = (info: PlayerView) => {
+    val playerHands = info.players.zipWithIndex.map { case (player, ind) =>
+      s"Player $ind cards: ${player.hand.show}"
+    }.mkString("\n")
+    s"""Dealer's card: ${info.dealer.show}
+       |$playerHands
+       |""".stripMargin
   }
 }
