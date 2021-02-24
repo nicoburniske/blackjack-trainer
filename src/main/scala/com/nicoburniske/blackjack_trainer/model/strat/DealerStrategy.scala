@@ -1,6 +1,6 @@
-package com.nicoburniske.model.strat
+package com.nicoburniske.blackjack_trainer.model.strat
 
-import com.nicoburniske.model.blackjack.{DealerAction, Hand, Hit, Stand}
+import com.nicoburniske.blackjack_trainer.model.game.{DealerAction, Hand, Hit, Stand}
 
 
 trait DealerStrategy {

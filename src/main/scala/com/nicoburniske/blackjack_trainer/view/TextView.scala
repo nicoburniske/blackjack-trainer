@@ -1,7 +1,6 @@
-package com.nicoburniske.view
+package com.nicoburniske.blackjack_trainer.view
 
-
-import com.nicoburniske.model.blackjack.{Ace, BlackjackModel, Card, Club, Diamond, Eight, Five, Four, Hand, Heart, Jack, King, Nine, Queen, Rank, Seven, Six, Spade, Suit, Ten, Three, Two}
+import com.nicoburniske.blackjack_trainer.model.game.{Ace, BlackjackModel, Card, Club, Diamond, Eight, Five, Four, Hand, Heart, Jack, King, Nine, Queen, Rank, Seven, Six, Spade, Suit, Ten, Three, Two}
 
 
 object TextView extends BlackjackView[String] {

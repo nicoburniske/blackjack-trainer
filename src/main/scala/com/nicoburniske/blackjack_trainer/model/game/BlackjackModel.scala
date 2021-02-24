@@ -1,5 +1,4 @@
-package com.nicoburniske.model.blackjack
-
+package com.nicoburniske.blackjack_trainer.model.game
 
 /**
  * Represents a player in a game of Blackjack.

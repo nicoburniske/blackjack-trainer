@@ -1,7 +1,7 @@
-package com.nicoburniske.model.player
+package com.nicoburniske.blackjack_trainer.model.player
 
-import com.nicoburniske.model.blackjack.{GamePlayer, Hand, PlayerAction}
-import com.nicoburniske.model.table.BlackjackHistory
+import com.nicoburniske.blackjack_trainer.model.game.{GamePlayer, Hand, PlayerAction}
+import com.nicoburniske.blackjack_trainer.model.table.BlackjackHistory
 
 /**
  * Represents a player to be queried for actions and informed of results in a game of Blackjack.

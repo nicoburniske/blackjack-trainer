@@ -1,6 +1,6 @@
-package com.nicoburniske.model
+package com.nicoburniske.blackjack_trainer.model
 
-import com.nicoburniske.model.blackjack.{Ace, Card, Hand, King, Spade, Two}
+import com.nicoburniske.blackjack_trainer.model.game.{Ace, Card, Hand, King, Spade, Two}
 import org.scalatest.flatspec.AnyFlatSpec
 
 class BlackjackModelTest extends AnyFlatSpec {

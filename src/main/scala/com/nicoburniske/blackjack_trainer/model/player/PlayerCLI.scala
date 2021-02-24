@@ -1,8 +1,8 @@
-package com.nicoburniske.model.player
+package com.nicoburniske.blackjack_trainer.model.player
 
-import com.nicoburniske.model.blackjack._
-import com.nicoburniske.model.table.BlackjackHistory
-import com.nicoburniske.view.TextView.handString
+import com.nicoburniske.blackjack_trainer.model.game.{Double, GamePlayer, Hand, Hit, PlayerAction, Stand, Surrender}
+import com.nicoburniske.blackjack_trainer.model.table.BlackjackHistory
+import com.nicoburniske.blackjack_trainer.view.TextView
 
 object PlayerCLI {
   val validInput: Map[String, PlayerAction] = Map("h" -> Hit, "s" -> Stand, "d" -> Double, "r" -> Surrender)
@@ -13,7 +13,7 @@ object PlayerCLI {
 /**
  * Represents a player that can play Blackjack from the console.
  */
-class PlayerCLI extends TablePlayer {
+class PlayerCLI() extends TablePlayer {
 
   // the position of the player at the table
   private var position: Option[Int] = None
@@ -21,7 +21,7 @@ class PlayerCLI extends TablePlayer {
   override def gameStart(): Boolean = {
     println(
       s"""
-         |${this.createOutputString("Welcome to Blackjack!", PlayerCLI.messageSectionLength)}
+         |${this.createOutputString("Welcome to Blackjack!")}
          |The game starts by dealing out two cards each to each player and dealer.
          |A score of 21 wins the game for the player or dealer
          |
@@ -48,7 +48,7 @@ class PlayerCLI extends TablePlayer {
       scala.io.StdIn.readLine(s"Please enter your starting bet (min 1) or quit (q). Current bankroll: $bankroll.\n")
     }
 
-    println(createOutputString("Starting New Hand", PlayerCLI.messageSectionLength))
+    println(createOutputString("Starting New Hand"))
     val response = getInput(bankroll)
     response.toIntOption match {
       case Some(bet) =>
@@ -79,19 +79,23 @@ class PlayerCLI extends TablePlayer {
     }
     val output =
       s"""
-        |${this.createOutputString("Hand Result", PlayerCLI.messageSectionLength)}
-        |You $wonString!
-        |Dealer's hand: ${handString(dealerHand)}
-        |Your hand: ${handString(playerHand)}
-        |""".stripMargin
+         |${this.createOutputString("Hand Result")}
+         |You $wonString!
+         |Dealer's hand: ${TextView.handString(dealerHand)}
+         |Your hand: ${TextView.handString(playerHand)}
+         |""".stripMargin
     println(output)
     true
   }
 
   override def gameEnd(endScore: Int, history: BlackjackHistory): Boolean = {
-    println(createOutputString("Game Over", PlayerCLI.messageSectionLength))
+    println(createOutputString("Game Over"))
     println(s"You left the casino with $endScore sheckles")
     println(s"You won ${history.winCount} times, You lost ${history.lossCount} times, You tied ${history.tieCount} times")
+    val historyString = history.choices
+      .map { case (model, action) => model.players(this.position.get).hand -> action }.toList.reverse.zipWithIndex
+      .map { case (tuple, index) => s"Hand #${index + 1} ${TextView.handString(tuple._1)} - Decision ${tuple._2.getClass.getSimpleName}" }.mkString("\n")
+    println(historyString)
     true
   }
 
@@ -102,9 +106,9 @@ class PlayerCLI extends TablePlayer {
 
   private def playerViewString(info: PlayerView): String = {
     val builder = new StringBuilder()
-    builder.append(s"Dealer card: ${handString(info.dealer)}\n")
+    builder.append(s"Dealer card: ${TextView.handString(info.dealer)}\n")
     info.players.zipWithIndex.foreach { case (player, ind) =>
-      val hand = handString(player.hand)
+      val hand = TextView.handString(player.hand)
       builder.append(s"Player $ind cards: $hand\n")
     }
     builder.toString
@@ -112,11 +116,11 @@ class PlayerCLI extends TablePlayer {
 
   override def getHandAction(player: GamePlayer, dealer: Hand): PlayerAction = {
     val prompt =
-      s"""|${this.createOutputString("Current Table State", PlayerCLI.messageSectionLength)}
-         |Dealer card: ${handString(dealer)}
-         |Your hand: ${handString(player.hand)}
-         |Please enter a move: Hit (h), Stand (s), Double (d), or Surrender (r)1
-         |""".stripMargin
+      s"""|${this.createOutputString("Current Table State")}
+          |Dealer card: ${TextView.handString(dealer)}
+          |Your hand: ${TextView.handString(player.hand)}
+          |Please enter a move: Hit (h), Stand (s), Double (d), or Surrender (r)
+          |""".stripMargin
     //TODO add more info
     val input = scala.io.StdIn.readLine(prompt)
 
@@ -128,11 +132,16 @@ class PlayerCLI extends TablePlayer {
     }
   }
 
-  private def createOutputString(message: String, totalLen: Int): String = {
+  private def createOutputString(message: String, totalLen: Int = PlayerCLI.messageSectionLength): String = {
     require(message.length <= totalLen)
     val remainingLen = totalLen - message.length
     val left: String = (0 until remainingLen / 2).map(_ => "-").mkString("")
     val right: String = (0 until (remainingLen - remainingLen / 2)).map(_ => "-").mkString("")
     s"$left $message $right"
   }
+
+  //  implicit val showHand: Show[Hand] = (h: Hand) => {
+  //    s"${h.cards.map().mkString(", ")} | ${h.bestValue.getOrElse(h.values.min)}"
+  //  }
+
 }

@@ -1,4 +1,4 @@
-package com.nicoburniske.model.blackjack
+package com.nicoburniske.blackjack_trainer.model.game
 
 /**
  * Represents an action that can be executed by a player or dealer in a game of Blackjack

@@ -1,8 +1,8 @@
-package com.nicoburniske.model.table
+package com.nicoburniske.blackjack_trainer.model.table
 
-import com.nicoburniske.model.blackjack._
-import com.nicoburniske.model.player.{PlayerView, TablePlayer}
-import com.nicoburniske.model.strat.DealerStrategy
+import com.nicoburniske.blackjack_trainer.model.game.{BlackjackModel, Double, GamePlayer, Hand, Hit, PlayerAction, Shoe, Split, Stand, Surrender}
+import com.nicoburniske.blackjack_trainer.model.player.{PlayerView, TablePlayer}
+import com.nicoburniske.blackjack_trainer.model.strat.DealerStrategy
 
 import scala.annotation.tailrec
 import scala.collection.immutable.ListMap
@@ -94,6 +94,7 @@ case class BlackjackHistory(choices: ListMap[BlackjackModel, PlayerAction] = Lis
 }
 
 object Blackjack {
+  private val logger = org.log4s.getLogger
 
   /**
    * Runs a game of Blackjack between the players.
@@ -225,7 +226,9 @@ object Blackjack {
               drawDealer(newState, strat)
             case None => state
           }
-        case None => state
+        case None =>
+          this.logger.error("DealerStrategy requested an invalid Action")
+          state
       }
     }
 

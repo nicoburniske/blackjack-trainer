@@ -1,4 +1,4 @@
-package com.nicoburniske.model.blackjack
+package com.nicoburniske.blackjack_trainer.model.game
 
 import scala.util.Random
 
@@ -45,6 +45,6 @@ class Shoe(val cards: List[Card]) {
     if (this.cards.isEmpty)
       None
     else
-      Some(this.cards.head, new Shoe(this.cards.tail))
+      Some((this.cards.head, new Shoe(this.cards.tail)))
   }
 }

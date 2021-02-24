@@ -1,4 +1,4 @@
-package com.nicoburniske.model.blackjack
+package com.nicoburniske.blackjack_trainer.model.game
 
 object Hand {
   val WINNING_SCORE = 21
@@ -71,7 +71,9 @@ case class Hand(cards: List[Card]) {
       case (Some(best), Some(dealerBest)) => Some(best.compareTo(dealerBest))
       case (Some(_), None) => Some(1)
       case (None, Some(_)) => Some(-1)
-      case (_, _) => None
+      case (_, _) =>
+        println("ERROR" + dealer.toString + this.toString)
+        None
     }
   }
 
